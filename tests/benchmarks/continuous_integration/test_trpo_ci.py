@@ -82,7 +82,7 @@ class TestBenchmarkPPO(unittest.TestCase):
                 g_x="Iteration",
                 g_y="AverageReturn",
                 b_x="TimestepsSoFar",
-                b_y="eprewmean",
+                b_y="EpRewMean",
                 factor_g=2048,
                 factor_b=1)
                
