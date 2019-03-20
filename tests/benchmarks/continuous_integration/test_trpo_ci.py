@@ -83,10 +83,9 @@ class TestBenchmarkPPO(unittest.TestCase):
                 g_y="AverageReturn",
                 b_x="TimestepsSoFar",
                 b_y="EpRewMean",
-                factor_g=2048,
+                factor_g=1024,
                 factor_b=1)
                
-
         write_file(result_json, "TRPO")
 
     test_benchmark_trpo.huge = True
@@ -211,10 +210,10 @@ def create_json(b_csvs, g_csvs, trails, seeds, b_x, b_y, g_x, g_y, factor_g, fac
         df_g = json.loads(pd.read_csv(g_csvs[trail]).to_json())
         df_b = json.loads(pd.read_csv(b_csvs[trail]).to_json())
 
-        g_res["time_steps"] = list(map(lambda x: float(x) * factor_g, df_g[g_x]))
+        g_res["time_steps"] = list(map(lambda x: float(x) * factor_g, df_g[g_x].values()))
         g_res["return"] = df_g[g_y]
 
-        b_res["time_steps"] = list(map(lambda x: float(x) * factor_b, df_b[b_x]))
+        b_res["time_steps"] = list(map(lambda x: float(x) * factor_b, df_b[b_x].values()))
         b_res["return"] = df_b[b_y]
 
         task_result[trail_seed]["garage"] = g_res

@@ -240,11 +240,11 @@ def create_json(b_csvs, g_csvs, trails, seeds, b_x, b_y, g_x, g_y, factor,):
         df_b = json.loads(pd.read_csv(b_csvs[trail]).to_json())
 
         g_res["time_steps"] = list(
-            map(lambda x: float(x) * factor, df_g[g_x]))
+            map(lambda x: float(x) * factor, df_g[g_x].values()))
         g_res["return"] = df_g[g_y]
 
         b_res["time_steps"] = list(
-            map(lambda x: float(x) * factor, df_b[b_x]))
+            map(lambda x: float(x) * factor, df_b[b_x].values()))
         b_res["return"] = df_b[b_y]
 
         task_result[trail_seed]["garage"] = g_res
