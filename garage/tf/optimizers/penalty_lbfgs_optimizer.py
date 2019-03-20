@@ -3,8 +3,9 @@ import scipy.optimize
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.misc import ext, logger
+from garage.misc import logger
 from garage.tf.misc import tensor_utils
+from garage.tf.optimizers.utils import LazyDict
 
 
 class PenaltyLbfgsOptimizer(Serializable):
@@ -81,7 +82,7 @@ class PenaltyLbfgsOptimizer(Serializable):
                         tf.cast(flat_grad, tf.float64),
                     ]
 
-            self._opt_fun = ext.LazyDict(
+            self._opt_fun = LazyDict(
                 f_loss=lambda: tensor_utils.compile_function(
                     inputs, loss, log_name="f_loss"),
                 f_constraint=lambda: tensor_utils.compile_function(
@@ -143,7 +144,7 @@ class PenaltyLbfgsOptimizer(Serializable):
                 # Either constraint satisfied, or we are at the last iteration
                 # already and no alternative parameter satisfies the constraint
                 if try_constraint_val < self._max_constraint_val or \
-                        (penalty_itr == self._max_penalty_itr - 1 and \
+                        (penalty_itr == self._max_penalty_itr - 1 and
                             opt_params is None):
                     opt_params = itr_opt_params
 

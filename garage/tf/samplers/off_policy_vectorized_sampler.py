@@ -16,7 +16,7 @@ import numpy as np
 from garage.misc import tensor_utils
 from garage.misc.overrides import overrides
 from garage.tf.envs import VecEnvExecutor
-from garage.tf.samplers import BatchSampler
+from garage.tf.samplers.batch_sampler import BatchSampler
 
 
 class OffPolicyVectorizedSampler(BatchSampler):
@@ -29,16 +29,15 @@ class OffPolicyVectorizedSampler(BatchSampler):
         :param algo: Algorithms.
         :param n_envs: Number of parallelized sampling envs.
         """
-        super(OffPolicyVectorizedSampler, self).__init__(algo)
+        if n_envs is None:
+            n_envs = int(algo.rollout_batch_size)
+        super(OffPolicyVectorizedSampler, self).__init__(algo, n_envs)
         self.n_envs = n_envs
 
     @overrides
     def start_worker(self):
         """Initialize the sampler."""
         n_envs = self.n_envs
-        if n_envs is None:
-            n_envs = int(self.algo.rollout_batch_size)
-            n_envs = max(1, min(n_envs, 100))
 
         if getattr(self.algo.env, 'vectorized', False):
             self.vec_env = self.algo.env.vec_env_executor(
@@ -58,11 +57,12 @@ class OffPolicyVectorizedSampler(BatchSampler):
         self.vec_env.close()
 
     @overrides
-    def obtain_samples(self, itr):
+    def obtain_samples(self, itr, batch_size):
         """
         Collect samples for the given iteration number.
 
         :param itr: Iteration number.
+        :param batch_size: Batch size.
         :return: A list of paths.
         """
         paths = []
@@ -70,13 +70,12 @@ class OffPolicyVectorizedSampler(BatchSampler):
         dones = np.asarray([True] * self.vec_env.num_envs)
         running_paths = [None] * self.vec_env.num_envs
         n_samples = 0
-        batch_samples = self.vec_env.num_envs * self.algo.max_path_length
 
         policy = self.algo.policy
         if self.algo.es:
             self.algo.es.reset()
 
-        while n_samples < batch_samples:
+        while n_samples < batch_size:
             policy.reset(dones)
             if self.algo.input_include_goal:
                 obs = [obs["observation"] for obs in obses]
@@ -87,7 +86,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
                 input_obses = obses
             if self.algo.es:
                 actions, agent_infos = self.algo.es.get_actions(
-                    input_obses, self.algo.policy)
+                    itr, input_obses, self.algo.policy)
             else:
                 actions, agent_infos = self.algo.policy.get_actions(
                     input_obses)
@@ -101,7 +100,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
                 env_infos = [dict() for _ in range(self.vec_env.num_envs)]
 
             if self.algo.input_include_goal:
-                self.algo.replay_buffer.add_transition(
+                self.algo.replay_buffer.add_transitions(
                     observation=obs,
                     action=actions,
                     goal=d_g,
@@ -115,7 +114,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
                     ],
                 )
             else:
-                self.algo.replay_buffer.add_transition(
+                self.algo.replay_buffer.add_transitions(
                     observation=obses,
                     action=actions,
                     reward=rewards * self.algo.reward_scale,

@@ -13,12 +13,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import tensorflow as tf
 
-from garage.misc import ext
+from garage.experiment import deterministic
+from garage.experiment import LocalRunner
+from garage.exploration_strategies import OUStrategy
 from garage.misc import logger as garage_logger
 from garage.replay_buffer import HerReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
-from garage.tf.exploration_strategies import OUStrategy
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
 
@@ -51,7 +52,11 @@ class TestBenchmarkHER(unittest.TestCase):
         mujoco1m = benchmarks.get_benchmark("HerDdpg")
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
+<<<<<<< HEAD
         benchmark_dir = "./data/local/benchmark_her/%s/" % timestamp
+=======
+        benchmark_dir = "./data/local/benchmarks/her/%s/" % timestamp
+>>>>>>> master
         for task in mujoco1m["tasks"]:
             env_id = task["env_id"]
             env = gym.make(env_id)
@@ -63,18 +68,18 @@ class TestBenchmarkHER(unittest.TestCase):
             baselines_csvs = []
             garage_csvs = []
 
-            for trail in range(task["trials"]):
-                env.reset()
-                seed = seeds[trail]
+            for trial in range(task["trials"]):
+                seed = seeds[trial]
 
-                trail_dir = task_dir + "/trail_%d_seed_%d" % (trail + 1, seed)
-                garage_dir = trail_dir + "/garage"
-                baselines_dir = trail_dir + "/baselines"
+                trial_dir = task_dir + "/trial_%d_seed_%d" % (trial + 1, seed)
+                garage_dir = trial_dir + "/garage"
+                baselines_dir = trial_dir + "/baselines"
 
-                garage_csv = run_garage(env, seed, garage_dir)
+                with tf.Graph().as_default():
+                    garage_csv = run_garage(env, seed, garage_dir)
 
-                CACHED_ENVS.clear()
-                baselines_csv = run_baselines(env_id, seed, baselines_dir)
+                    CACHED_ENVS.clear()
+                    baselines_csv = run_baselines(env_id, seed, baselines_dir)
 
                 garage_csvs.append(garage_csv)
                 baselines_csvs.append(baselines_csv)
@@ -88,7 +93,7 @@ class TestBenchmarkHER(unittest.TestCase):
                 g_y="AverageSuccessRate",
                 b_x="epoch",
                 b_y="train/success_rate",
-                trails=task["trials"],
+                trials=task["trials"],
                 seeds=seeds,
                 plt_file=plt_file,
                 env_id=env_id)
@@ -103,20 +108,20 @@ def run_garage(env, seed, log_dir):
     Replace the ppo with the algorithm you want to run.
 
     :param env: Environment of the task.
-    :param seed: Random seed for the trail.
+    :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
     :return:
     """
-    ext.set_seed(seed)
+    deterministic.set_seed(seed)
+    env.reset()
 
-    with tf.Graph().as_default():
+    with LocalRunner() as runner:
         env = TfEnv(env)
 
         action_noise = OUStrategy(env.spec, sigma=params["sigma"])
 
         policy = ContinuousMLPPolicy(
             env_spec=env.spec,
-            name="Policy",
             hidden_sizes=params["policy_hidden_sizes"],
             hidden_nonlinearity=tf.nn.relu,
             output_nonlinearity=tf.nn.tanh,
@@ -125,7 +130,6 @@ def run_garage(env, seed, log_dir):
 
         qf = ContinuousMLPQFunction(
             env_spec=env.spec,
-            name="QFunction",
             hidden_sizes=params["qf_hidden_sizes"],
             hidden_nonlinearity=tf.nn.relu,
             input_include_goal=True,
@@ -150,7 +154,6 @@ def run_garage(env, seed, log_dir):
             target_update_tau=params["tau"],
             n_epochs=params["n_epochs"],
             n_epoch_cycles=params["n_epoch_cycles"],
-            max_path_length=params["n_rollout_steps"],
             n_train_steps=params["n_train_steps"],
             discount=params["discount"],
             exploration_strategy=action_noise,
@@ -165,7 +168,11 @@ def run_garage(env, seed, log_dir):
         garage_logger.add_tabular_output(tabular_log_file)
         garage_logger.set_tensorboard_dir(log_dir)
 
-        algo.train()
+        runner.setup(algo, env)
+        runner.train(
+            n_epochs=params['n_epochs'],
+            n_epoch_cycles=params['n_epoch_cycles'],
+            batch_size=params["n_rollout_steps"])
 
         garage_logger.remove_tabular_output(tabular_log_file)
 
@@ -179,7 +186,7 @@ def run_baselines(env_id, seed, log_dir):
     Replace the ppo and its training with the algorithm you want to run.
 
     :param env: Environment of the task.
-    :param seed: Random seed for the trail.
+    :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
     :return
     """
@@ -199,7 +206,7 @@ def run_baselines(env_id, seed, log_dir):
     return osp.join(log_dir, "progress.csv")
 
 
-def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trails, seeds, plt_file, env_id):
+def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id):
     """
     Plot benchmark from csv files of garage and baselines.
 
@@ -209,27 +216,27 @@ def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trails, seeds, plt_file, env_id):
     :param g_y: Y column names of garage csv.
     :param b_x: X column names of baselines csv.
     :param b_y: Y column names of baselines csv.
-    :param trails: Number of trails in the task.
+    :param trials: Number of trials in the task.
     :param seeds: A list contains all the seeds in the task.
     :param plt_file: Path of the plot png file.
     :param env_id: String contains the id of the environment.
     :return:
     """
     assert len(b_csvs) == len(g_csvs)
-    for trail in range(trails):
-        seed = seeds[trail]
+    for trial in range(trials):
+        seed = seeds[trial]
 
-        df_g = pd.read_csv(g_csvs[trail])
-        df_b = pd.read_csv(b_csvs[trail])
+        df_g = pd.read_csv(g_csvs[trial])
+        df_b = pd.read_csv(b_csvs[trial])
 
         plt.plot(
             df_g[g_x],
             df_g[g_y],
-            label="garage_trail%d_seed%d" % (trail + 1, seed))
+            label="garage_trial%d_seed%d" % (trial + 1, seed))
         plt.plot(
             df_b[b_x],
             df_b[b_y],
-            label="baselines_trail%d_seed%d" % (trail + 1, seed))
+            label="baselines_trial%d_seed%d" % (trial + 1, seed))
 
     plt.legend()
     plt.xlabel("Iteration")

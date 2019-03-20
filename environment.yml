@@ -8,3 +8,6 @@ dependencies:
     - pip:
         - -e .[all]
         - -e .[dev]
+        # install sister packages to make sure environments stay compatible
+        - git+https://github.com/rlworkgroup/metaworlds.git@master#egg=metaworlds
+        - git+https://github.com/rlworkgroup/viskit.git@master#egg=viskit

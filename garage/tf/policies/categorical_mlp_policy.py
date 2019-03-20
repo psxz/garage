@@ -1,3 +1,4 @@
+from akro.tf import Discrete
 import tensorflow as tf
 
 from garage.core import Serializable
@@ -7,8 +8,7 @@ import garage.tf.core.layers as L
 from garage.tf.core.network import MLP
 from garage.tf.distributions import Categorical
 from garage.tf.misc import tensor_utils
-from garage.tf.policies import StochasticPolicy
-from garage.tf.spaces import Discrete
+from garage.tf.policies.base import StochasticPolicy
 
 
 class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):

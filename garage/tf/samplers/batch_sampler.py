@@ -1,3 +1,5 @@
+from collections import deque
+
 import numpy as np
 import tensorflow as tf
 
@@ -19,7 +21,14 @@ def worker_init_tf_vars(g):
 
 
 class BatchSampler(BaseSampler):
+    def __init__(self, algo, n_envs):
+        super(BatchSampler, self).__init__(algo)
+        self.n_envs = n_envs
+        self.eprewmean = deque(maxlen=100)
+
     def start_worker(self):
+        assert singleton_pool.initialized, \
+            "Use singleton_pool.initialize(n_parallel) to setup workers."
         if singleton_pool.n_parallel > 1:
             singleton_pool.run_each(worker_init_tf)
         parallel_sampler.populate_task(self.algo.env, self.algo.policy)
@@ -29,20 +38,21 @@ class BatchSampler(BaseSampler):
     def shutdown_worker(self):
         parallel_sampler.terminate_task(scope=self.algo.scope)
 
-    def obtain_samples(self, itr):
+    def obtain_samples(self, itr, batch_size=None, whole_paths=True):
+        if not batch_size:
+            batch_size = self.algo.max_path_length * self.n_envs
+
         cur_policy_params = self.algo.policy.get_param_values()
-        cur_env_params = self.algo.env.get_param_values()
         paths = parallel_sampler.sample_paths(
             policy_params=cur_policy_params,
-            env_params=cur_env_params,
-            max_samples=self.algo.batch_size,
+            max_samples=batch_size,
             max_path_length=self.algo.max_path_length,
             scope=self.algo.scope,
         )
-        if self.algo.whole_paths:
+        if whole_paths:
             return paths
         else:
-            paths_truncated = truncate_paths(paths, self.algo.batch_size)
+            paths_truncated = truncate_paths(paths, batch_size)
             return paths_truncated
 
     def process_samples(self, itr, paths):
@@ -60,9 +70,9 @@ class BatchSampler(BaseSampler):
 
         for idx, path in enumerate(paths):
             path_baselines = np.append(all_path_baselines[idx], 0)
-            deltas = path["rewards"] + \
-                     self.algo.discount * path_baselines[1:] - \
-                     path_baselines[:-1]
+            deltas = path["rewards"] \
+                + self.algo.discount * path_baselines[1:] \
+                - path_baselines[:-1]
             path["advantages"] = special.discount_cumsum(
                 deltas, self.algo.discount * self.algo.gae_lambda)
             path["deltas"] = deltas
@@ -113,6 +123,7 @@ class BatchSampler(BaseSampler):
             [path["returns"][0] for path in paths]))
 
         undiscounted_returns = [sum(path["rewards"]) for path in paths]
+        self.eprewmean.extend(undiscounted_returns)
 
         ent = np.sum(
             self.algo.policy.distribution.entropy(agent_infos) *
@@ -136,6 +147,8 @@ class BatchSampler(BaseSampler):
         logger.record_tabular('AverageDiscountedReturn',
                               average_discounted_return)
         logger.record_tabular('AverageReturn', np.mean(undiscounted_returns))
+        logger.record_tabular('Extras/EpisodeRewardMean',
+                              np.mean(self.eprewmean))
         logger.record_tabular('NumTrajs', len(paths))
         logger.record_tabular('Entropy', ent)
         logger.record_tabular('Perplexity', np.exp(ent))

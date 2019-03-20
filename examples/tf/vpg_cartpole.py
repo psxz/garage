@@ -9,37 +9,35 @@ Results:
     RiseTime: itr 16
 """
 from garage.baselines import LinearFeatureBaseline
-from garage.experiment import run_experiment
+from garage.experiment import LocalRunner, run_experiment
 from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
 
 
 def run_task(*_):
-    """Wrap VPG training task in the run_task function."""
-    env = TfEnv(env_name='CartPole-v1')
+    with LocalRunner() as runner:
+        env = TfEnv(env_name='CartPole-v1')
 
-    policy = CategoricalMLPPolicy(
-        name="policy", env_spec=env.spec, hidden_sizes=(32, 32))
+        policy = CategoricalMLPPolicy(
+            name="policy", env_spec=env.spec, hidden_sizes=(32, 32))
 
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+        baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-    algo = VPG(
-        env=env,
-        policy=policy,
-        baseline=baseline,
-        batch_size=10000,
-        max_path_length=100,
-        n_itr=100,
-        discount=0.99,
-        optimizer_args=dict(tf_optimizer_args=dict(learning_rate=0.01, )))
-    algo.train()
+        algo = VPG(
+            env=env,
+            policy=policy,
+            baseline=baseline,
+            max_path_length=100,
+            discount=0.99,
+            optimizer_args=dict(tf_optimizer_args=dict(learning_rate=0.01, )))
+
+        runner.setup(algo, env)
+        runner.train(n_epochs=100, batch_size=10000)
 
 
 run_experiment(
     run_task,
-    n_parallel=1,
     snapshot_mode="last",
     seed=1,
-    plot=False,
 )

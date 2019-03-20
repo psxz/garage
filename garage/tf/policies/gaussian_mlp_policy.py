@@ -1,3 +1,4 @@
+from akro.tf import Box
 import numpy as np
 import tensorflow as tf
 
@@ -9,8 +10,7 @@ import garage.tf.core.layers as L
 from garage.tf.core.network import MLP
 from garage.tf.distributions import DiagonalGaussian
 from garage.tf.misc import tensor_utils
-from garage.tf.policies import StochasticPolicy
-from garage.tf.spaces import Box
+from garage.tf.policies.base import StochasticPolicy
 
 
 class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
@@ -75,12 +75,9 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                         init_std_param = np.log(np.exp(init_std) - 1)
                     else:
                         raise NotImplementedError
-                    b = np.concatenate(
-                        [
-                            np.zeros(action_dim),
-                            np.full(action_dim, init_std_param)
-                        ],
-                        axis=0)
+                    b = np.concatenate((np.zeros(action_dim),
+                                        np.full(action_dim, init_std_param)),
+                                       axis=0)
                     b = tf.constant_initializer(b)
                     with tf.variable_scope(self._mean_network_name):
                         mean_network = MLP(
@@ -250,8 +247,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
             return new_action_var
 
     def log_diagnostics(self, paths):
-        log_stds = np.vstack(
-            [path["agent_infos"]["log_std"] for path in paths])
+        log_stds = paths["agent_infos"]["log_std"]
         logger.record_tabular("{}/AverageStd".format(self.name),
                               np.mean(np.exp(log_stds)))
 
