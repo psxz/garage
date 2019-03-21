@@ -32,6 +32,7 @@ from garage.tf.algos import TRPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
+from tests.helpers import ResultsHelper as rh
 from tests.wrappers import AutoStopEnv
 
 
