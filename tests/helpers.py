@@ -142,7 +142,7 @@ class ResultsHelper:
         result_file.write(json.dumps(res))
 
 
-    def create_json(b_csvs, g_csvs, trails, seeds, b_x, b_y, g_x, g_y, factor):
+    def create_json(b_csvs, g_csvs, trails, seeds, b_x, b_y, g_x, g_y, factor_g, factor_b):
         task_result = {}
         for trail in range(trails):
             g_res, b_res = {}, {}
@@ -152,17 +152,17 @@ class ResultsHelper:
             df_g = json.loads(pd.read_csv(g_csvs[trail]).to_json())
             df_b = json.loads(pd.read_csv(b_csvs[trail]).to_json())
 
-            g_res["time_steps"] = list(map(lambda x: float(x) * factor, df_g[g_x].values()))
+            g_res["time_steps"] = list(map(lambda x: float(x) * factor_g, df_g[g_x].values()))
             g_res["return"] = df_g[g_y]
 
-            b_res["time_steps"] = list(map(lambda x: float(x) * factor, df_b[b_x].values()))
+            b_res["time_steps"] = list(map(lambda x: float(x) * factor_b, df_b[b_x].values()))
             b_res["return"] = df_b[b_y]
 
             task_result[trail_seed]["garage"] = g_res
             task_result[trail_seed]["baselines"] = b_res
         return task_result
 
-    def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id,x_label,y_label):
+    def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id, x_label, y_label):
         """
         Plot benchmark from csv files of garage and baselines.
 
