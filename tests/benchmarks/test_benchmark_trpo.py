@@ -97,7 +97,7 @@ class TestBenchmarkPPO(unittest.TestCase):
                 x_label="Iteration",
                 y_label="AverageReturn")
 
-            result_json[env_id] = create_json(
+            result_json[env_id] = rh.create_json(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
                 seeds=seeds,
