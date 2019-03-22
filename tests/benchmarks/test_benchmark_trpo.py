@@ -87,7 +87,7 @@ class TestBenchmarkPPO(unittest.TestCase):
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
                 g_x="Iteration",
-                g_y="EpisodeRewardMean",
+                g_y="AverageReturn",
                 b_x="EpThisIter",
                 b_y="EpRewMean",
                 trials=task["trials"],
