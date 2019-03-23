@@ -48,7 +48,7 @@ class TestBenchmarkPPO(unittest.TestCase):
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
         benchmark_dir = "./data/local/benchmarks/trpo/%s/" % timestamp
-        results_json = {}
+        result_json = {}
         for task in mujoco1m["tasks"]:
             env_id = task["env_id"]
             env = gym.make(env_id)
