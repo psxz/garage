@@ -110,7 +110,7 @@ class TestBenchmarkPPO(unittest.TestCase):
                 factor_b=1)
             env.close()
 
-        write_file(result_json, "TRPO")
+        rh.write_file(result_json, "TRPO")
            
     test_benchmark_trpo.huge = True
 
@@ -212,42 +212,42 @@ def run_baselines(env, seed, log_dir):
     return osp.join(log_dir, "progress.csv")
 
 
-def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id):
-    """
-    Plot benchmark from csv files of garage and baselines.
+# def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id):
+#     """
+#     Plot benchmark from csv files of garage and baselines.
 
-    :param b_csvs: A list contains all csv files in the task.
-    :param g_csvs: A list contains all csv files in the task.
-    :param g_x: X column names of garage csv.
-    :param g_y: Y column names of garage csv.
-    :param b_x: X column names of baselines csv.
-    :param b_y: Y column names of baselines csv.
-    :param trials: Number of trials in the task.
-    :param seeds: A list contains all the seeds in the task.
-    :param plt_file: Path of the plot png file.
-    :param env_id: String contains the id of the environment.
-    :return:
-    """
-    assert len(b_csvs) == len(g_csvs)
-    for trial in range(trials):
-        seed = seeds[trial]
+#     :param b_csvs: A list contains all csv files in the task.
+#     :param g_csvs: A list contains all csv files in the task.
+#     :param g_x: X column names of garage csv.
+#     :param g_y: Y column names of garage csv.
+#     :param b_x: X column names of baselines csv.
+#     :param b_y: Y column names of baselines csv.
+#     :param trials: Number of trials in the task.
+#     :param seeds: A list contains all the seeds in the task.
+#     :param plt_file: Path of the plot png file.
+#     :param env_id: String contains the id of the environment.
+#     :return:
+#     """
+#     assert len(b_csvs) == len(g_csvs)
+#     for trial in range(trials):
+#         seed = seeds[trial]
 
-        df_g = pd.read_csv(g_csvs[trial])
-        df_b = pd.read_csv(b_csvs[trial])
+#         df_g = pd.read_csv(g_csvs[trial])
+#         df_b = pd.read_csv(b_csvs[trial])
 
-        plt.plot(
-            df_g[g_x],
-            df_g[g_y],
-            label="garage_trial%d_seed%d" % (trial + 1, seed))
-        plt.plot(
-            df_b[b_x],
-            df_b[b_y],
-            label="baselines_trial%d_seed%d" % (trial + 1, seed))
+#         plt.plot(
+#             df_g[g_x],
+#             df_g[g_y],
+#             label="garage_trial%d_seed%d" % (trial + 1, seed))
+#         plt.plot(
+#             df_b[b_x],
+#             df_b[b_y],
+#             label="baselines_trial%d_seed%d" % (trial + 1, seed))
 
-    plt.legend()
-    plt.xlabel("Iteration")
-    plt.ylabel("AverageReturn")
-    plt.title(env_id)
+#     plt.legend()
+#     plt.xlabel("Iteration")
+#     plt.ylabel("AverageReturn")
+#     plt.title(env_id)
 
-    plt.savefig(plt_file)
-    plt.close()
+#     plt.savefig(plt_file)
+#     plt.close()
