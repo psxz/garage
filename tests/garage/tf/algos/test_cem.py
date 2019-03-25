@@ -33,6 +33,6 @@ class TestCEM(TfGraphTestCase):
             runner.setup(algo, env, sampler_cls=OnPolicyVectorizedSampler)
             rtn = runner.train(
                 n_epochs=5, batch_size=2000, n_epoch_cycles=n_samples)
-            assert rtn > 60
+            assert rtn > 40
 
             env.close()
