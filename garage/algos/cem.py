@@ -2,7 +2,7 @@ import numpy as np
 
 from garage.algos.base import RLAlgorithm
 from garage.core import Serializable
-from garage.logger import tabular
+from garage.logger import logger, tabular
 from garage.plotter import Plotter
 
 
@@ -114,7 +114,7 @@ class CEM(RLAlgorithm, Serializable):
         self.all_params.append(self.cur_params.copy())
         self.policy.set_param_values(self.cur_params)
 
-        logger.dump_tabular(with_prefix=False)
+        logger.log(tabular)
         return rtn
 
     def get_itr_snapshot(self, itr):

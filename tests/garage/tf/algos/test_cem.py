@@ -7,8 +7,8 @@ from garage.tf.samplers import OnPolicyVectorizedSampler
 from tests.fixtures import TfGraphTestCase
 
 
-class TestERWR(TfGraphTestCase):
-    def test_erwr_cartpole(self):
+class TestCEM(TfGraphTestCase):
+    def test_cem_cartpole(self):
         """Test CEM with Cartpole-v1 environment."""
         with LocalRunner() as runner:
             env = TfEnv(env_name="CartPole-v1")
