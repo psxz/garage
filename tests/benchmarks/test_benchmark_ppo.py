@@ -49,7 +49,6 @@ class TestBenchmarkPPO(unittest.TestCase):
         :return:
         """
         mujoco1m = benchmarks.get_benchmark("Mujoco1M")
-
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
         benchmark_dir = "./data/local/benchmarks/ppo/%s/" % timestamp
         result_json = {}
@@ -115,7 +114,7 @@ class TestBenchmarkPPO(unittest.TestCase):
                 factor_g=2048,
                 factor_b=2048)
 
-        write_file(result_json, "PPO")
+        rh.write_file(result_json, "PPO")
 
     test_benchmark_ppo.huge = True
 

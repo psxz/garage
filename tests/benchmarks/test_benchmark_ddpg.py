@@ -136,7 +136,7 @@ class TestBenchmarkDDPG(unittest.TestCase):
                 factor_g=params["n_epoch_cycles"] * params["n_rollout_steps"],
                 factor_b=1)
 
-        write_file(result_json, "DDPG")
+        rh.write_file(result_json, "DDPG")
 
     test_benchmark_ddpg.huge = True
 
