@@ -7,7 +7,7 @@ Here it runs CartPole-v1 environment with 100 epoches.
 Results:
     AverageReturn: 100
     RiseTime: epoch 38 (itr 760),
-              but regression is observed on the course of training.
+              but regression is observed in the course of training.
 """
 from garage.algos import CMAES
 from garage.baselines import LinearFeatureBaseline
