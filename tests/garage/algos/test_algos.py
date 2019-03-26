@@ -4,7 +4,6 @@ from nose2 import tools
 import numpy as np
 
 from garage.algos import CEM
-from garage.algos import CMAES
 from garage.algos.nop import NOP
 from garage.baselines import LinearFeatureBaseline
 from garage.baselines import ZeroBaseline
@@ -26,16 +25,11 @@ algo_args = {
         max_path_length=100,
         n_samples=5,
     ),
-    CMAES: dict(
-        n_itr=1,
-        max_path_length=100,
-        batch_size=5000,
-    ),
     NOP: common_batch_algo_args,
 }
 
 polopt_cases = []
-for algo in [CEM, CMAES, NOP]:
+for algo in [CEM, NOP]:
     polopt_cases.extend([
         (algo, GridWorldEnv, DummyPolicy, ZeroBaseline),
         (algo, PointEnv, DummyPolicy, ZeroBaseline),
